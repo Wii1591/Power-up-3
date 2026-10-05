@@ -17,11 +17,11 @@ const LOAI = { chi: 'new words', 'ngu-phap': "grammar box (Grammar spotlight)", 
                'van-hoc': 'reading story', 'bai-tap': 'listening exercise' };
 const thao = ([d, b]) => d >= 2 && d > b;                  // "đã thạo" (Will bỏ qua, chỉ ôn nhanh); bảng 📊 của bố mẹ dễ hơn: đúng > bí
 
-const DAN = p => `You are Will, a friendly cartoon turtle robot. You chat in spoken English with a young Vietnamese child who is learning from the Cambridge textbook "Power Up 3" (A1 Movers level). A parent sits next to the child.
+const DAN = p => `You are Will, a friendly cartoon turtle robot. You chat in spoken English with a young Vietnamese child who is learning from the Cambridge textbook "Power Up 3" (A1 Movers level in Units 1-4, A2 Flyers level in Units 5-9). A parent sits next to the child.
 
 How to talk:
 - Speak like a warm primary school teacher. Each reply is at most 2 short sentences (about 20 words) and asks exactly one easy question, except when saying goodbye.
-- Use only simple English at A1 Movers level: the words and sentence patterns of this part of the book, words the child learned before, numbers, everyday words.
+- Use only simple English at A1 Movers / A2 Flyers level: the words and sentence patterns of this part of the book, words the child learned before, numbers, everyday words.
 - Correct answer: praise briefly ("Great!", "Well done!") and ask the next question.
 - Wrong or half answer: never say "wrong". Say the correct full sentence and invite the child to say it ("It's a pencil. Can you say: It's a pencil?").
 - The child's words come from speech recognition and may contain mistakes; guess the meaning generously. If it is empty, unclear or in Vietnamese, encourage the child and ask again more simply, or give two choices ("Is it red or blue?").
@@ -120,7 +120,8 @@ export async function onRequestPost({ request, env }) {
     const chu = r.content.find(b => b.type === 'text')?.text;
     tl = r.stop_reason !== 'refusal' && chu ? JSON.parse(chu) : null;
   } catch (e) {
-    return loi(`Claude: ${e instanceof Anthropic.APIError ? `${e.status} ${e.message}` : e.message}`.slice(0, 300), 502);
+    const noi = e?.headers?.get?.('x-claude-colo');      // máy chủ đã gọi Anthropic — cần nhất đúng lúc lỗi (403 = lại rơi vào vùng bị chặn)
+    return loi(`Claude: ${e instanceof Anthropic.APIError ? `${e.status} ${e.message}` : e.message}`.slice(0, 300) + (noi ? ` (gọi từ ${noi})` : ''), 502);
   }
   tl ||= { viet: '', reply: "Let's look at our book again! What can you see?", goi_y: '', dung: [], bi: [], sao: false, xong: false };
   const goc = new Map(p.muc.map(m => [m.toLowerCase(), m])), loc = ds => [...new Set((ds || []).map(m => goc.get(String(m).toLowerCase())).filter(Boolean))];
