@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="darkreader-lock">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#b91c1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Power Up 3">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/icon-192.png">
+<title>Power Up 3</title>
+<meta name="description" content="Sách Power Up 3 (Cambridge) tương tác cho bé: nút nghe trên từng trang, chữ chạy theo bài hát và bài vè, bài tập chạm là chấm ngay, viết Apple Pencil.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --la: #b91c1c; --la-dam: #7f1d1d; --tim: #6a2c91; --tim-dam: #4a1d66; --chu: #1d2b22; --mo: #4b5a50; --dung: #2e9d4c; }
+  * { box-sizing: border-box; }
+  html { background: #991b1b; }
+  /* nền đỏ sẫm (bìa 3 rạp xiếc) để chữ trắng đủ tương phản (≥ 4.5:1) */
+  body { margin: 0; min-height: 100dvh; font: 700 17px/1.4 Nunito, "Segoe UI", system-ui, sans-serif; color: var(--chu);
+         background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%); }
+  :focus-visible { outline: 4px solid #ffc83d; outline-offset: 3px; }
+  .khung { max-width: 560px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px 32px; display: grid; gap: 16px; }
+  .dau { display: flex; align-items: center; gap: 14px; color: #fff; }
+  .dau img { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, .14)); flex: none; }
+  h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.15; text-shadow: 0 2px 0 var(--la-dam); }
+  .dau p { margin: 4px 0 0; font-size: 16px; }
+  .the { background: #fff; border-radius: 22px; padding: 18px; box-shadow: 0 5px 0 rgba(0, 0, 0, .14); }
+  .the h2 { margin: 0 0 8px; font-size: 19px; font-weight: 900; }
+  .the p { margin: 8px 0 0; }
+  .nut { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 16px; min-height: 48px;
+         padding: 10px 18px; font: inherit; font-weight: 900; cursor: pointer; text-decoration: none; color: var(--chu);
+         background: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .15); }
+  .nut:active { translate: 0 3px; box-shadow: 0 1px 0 rgba(0, 0, 0, .15); }
+  .nut.chinh { background: var(--tim); color: #fff; box-shadow: 0 4px 0 var(--tim-dam); }
+  .nut:disabled { opacity: .55; cursor: default; }
+  .vao { display: grid; gap: 12px; }
+  .vao .nut { min-height: 84px; font-size: 26px; border-radius: 22px; }
+  .vao .nut.chinh { box-shadow: 0 5px 0 var(--tim-dam); }
+  .thanh { height: 16px; border-radius: 99px; background: #fde2e2; overflow: hidden; margin-top: 4px; }
+  .thanh i { display: block; height: 100%; background: var(--dung); transform-origin: left; transform: scaleX(0); transition: transform .3s; }
+  #tai-het { margin-top: 12px; }
+  .nho { font-size: 14.5px; font-weight: 600; color: var(--mo); }
+  .khung > .nho { color: #fff; margin: 0; }
+  [hidden] { display: none !important; }
+</style>
+<script src="/cau-hinh.js"></script>
+<script src="/tai-ve.js"></script>
+</head>
+<body>
+<main class="khung">
+  <header class="dau">
+    <img src="/will.png" alt="Rùa Will">
+    <div><h1>Power Up 3</h1><p>Pupil's Book · Cambridge</p></div>
+  </header>
+
+  <nav class="vao" id="vao" hidden>
+    <a class="nut chinh" href="/Hoc-Power-Up-3.html">📖 Học sách</a>
+  </nav>
+
+  <section class="the" id="kho" hidden>
+    <h2>Dữ liệu trên máy này</h2>
+    <div class="thanh" role="progressbar" aria-label="Đã tải về máy" aria-valuemin="0" aria-valuemax="100" id="thanh"><i></i></div>
+    <p id="kho-chu">Đang kiểm tra…</p>
+    <button class="nut chinh" id="tai-het" disabled>⬇️ Tải hết về máy</button>
+    <p class="nho">Nên dùng Wi-Fi. Chưa tải hết vẫn học được: trang nào cần sẽ tự tải, chỉ chậm hơn một chút.</p>
+  </section>
+
+  <p class="nho" id="trang-thai" role="status">Đang mở…</p>
+  <p class="nho">Trên iPad: bấm Chia sẻ → <b>Thêm vào MH chính</b> để mở như ứng dụng và giữ dữ liệu lâu dài.</p>
+</main>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

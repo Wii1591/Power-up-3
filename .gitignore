@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env*
+_chuan-bi.log
+_thu/
+.wrangler/

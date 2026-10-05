@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<link rel="icon" href="icon-192.png"><script src="cau-hinh.js"></script><script src="tai-ve.js"></script><script src="may-chu.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="darkreader-lock">
+<title>Học Power Up 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nen: #e6eef0; --the: #ffffff; --chu: #26323a; --mo: #56626b; --vien: #d3dfe2;
+    --xanh: #0d7887; --xanh-nhat: #d9f1f4; --cam: #f28a1c; --cam-nhat: #fff0de;
+    --dau: 56px; --cuoi: 76px; --ben: 232px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--nen); color: var(--chu); font: 500 15px/1.4 Nunito, "Segoe UI", system-ui, sans-serif;
+         display: grid; grid-template: var(--dau) 1fr var(--cuoi) / var(--ben) 1fr; overflow: hidden; touch-action: manipulation; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--cam); outline-offset: 2px; }
+
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+           background: var(--the); border-bottom: 1px solid var(--vien); }
+  header h1 { font-size: 18px; font-weight: 800; margin: 0; white-space: nowrap; }
+  header h1 span { color: var(--xanh); }
+  .goi-y { color: var(--mo); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .goi-y b { color: var(--xanh); }
+  .phai { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .nut-nho { border: 1px solid var(--vien); background: var(--the); border-radius: 10px; padding: 6px 12px; font-weight: 700; }
+  a.nut-nho { text-decoration: none; color: inherit; }
+  .nut-nho:hover { border-color: var(--xanh); color: var(--xanh); }
+  .nut-nho[aria-pressed="true"] { background: var(--xanh); border-color: var(--xanh); color: #fff; }
+
+  aside { background: var(--the); border-right: 1px solid var(--vien); overflow-y: auto; padding: 12px 10px 20px; }
+  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mo); margin: 14px 8px 6px; }
+  .muc { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; border: 0; background: none;
+         padding: 8px 10px; border-radius: 10px; font-weight: 700; }
+  .muc small { color: var(--mo); font-weight: 500; }
+  .muc i { display: block; font-style: normal; font-weight: 500; color: var(--mo); font-size: 12.5px; line-height: 1.25; }
+  .muc.dang i { color: #fff; }
+  .muc:hover { background: var(--xanh-nhat); }
+  .muc.dang { background: var(--xanh); color: #fff; }
+  .muc.dang small { color: #ffffff; }
+  .muc.review { font-weight: 500; padding-left: 20px; }
+  .video { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px; }
+  .video button { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--cam); background: var(--cam-nhat);
+                  font-size: 18px; font-weight: 800; color: #8f4700; }
+  .video button:hover { background: var(--cam); color: #fff; }
+  .video p { margin: 0; color: var(--mo); font-size: 13px; }
+
+  /* ngón tay trong khung sách do app lo (chụm = phóng to trang, kéo = di chuyển) → menu, thanh bút, thanh nghe luôn nằm trên màn hình */
+  main { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 0; padding: 12px;
+         user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; }
+  .trang { position: relative; background: #fff; box-shadow: 0 6px 24px rgba(0, 0, 0, .14); }
+  .trang.phong { overflow: hidden; box-shadow: none; background: var(--nen); }
+  .lop { position: absolute; inset: 0; }
+  .trang.phong .lop { inset: auto; left: 0; top: 0; }
+  .trang img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+  canvas.viet { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  body.dang-viet canvas.viet { pointer-events: auto; touch-action: none; cursor: crosshair; }
+  body.dang-viet main { touch-action: none; }
+  body.dang-viet.chon-cho canvas.viet { cursor: zoom-in; }
+  body.dang-viet .nghe { opacity: .55; pointer-events: none; }
+
+  /* Thanh bút khi bật chế độ Viết */
+  #cong-cu { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; display: none; align-items: center; gap: 6px;
+             background: var(--the); border: 1px solid var(--vien); border-radius: 16px; padding: 6px 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, .12); }
+  body.dang-viet #cong-cu { display: flex; }
+  body.dang-viet main { padding-top: 66px; }          /* chừa chỗ cho thanh bút, không che trang */
+  #cong-cu .vach { width: 1px; align-self: stretch; background: var(--vien); margin: 2px 2px; }
+  #cong-cu button { min-width: 40px; height: 40px; border-radius: 12px; border: 1px solid transparent; background: none; font-weight: 700; padding: 0 8px; white-space: nowrap; }
+  #cong-cu button:hover { border-color: var(--vien); }
+  #cong-cu button[aria-pressed="true"] { background: var(--xanh-nhat); border-color: var(--xanh); color: var(--xanh); }
+  #cong-cu .mau { width: 32px; min-width: 32px; height: 32px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--vien); padding: 0; }
+  #cong-cu .mau[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--xanh); background: var(--m); }
+  #cong-cu .bao { font-size: 12px; color: var(--mo); padding: 0 4px; max-width: 150px; }
+  .trang .so { position: absolute; bottom: -22px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--mo); }
+  .lat { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 96px; border: 0; border-radius: 14px;
+         background: rgba(255, 255, 255, .85); font-size: 28px; font-weight: 800; color: var(--xanh); box-shadow: 0 2px 10px rgba(0,0,0,.12); z-index: 2; }
+  .lat:hover { background: var(--xanh); color: #fff; }
+  .lat:disabled { opacity: .25; pointer-events: none; }
+  #truoc { left: 8px; } #sau { right: 8px; }
+
+  /* Nút nghe đặt đè lên huy hiệu "disc" in trong sách */
+  .nghe { position: absolute; z-index: 2; width: 3.7%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+          border: 3px solid rgba(21, 151, 168, .45); background: rgba(21, 151, 168, .06); padding: 0;
+          transition: transform .15s, border-color .15s, background .15s; }
+  .nghe::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+  .nghe:hover { border-color: var(--xanh); background: rgba(21, 151, 168, .16); transform: translate(-50%, -50%) scale(1.15); }
+  .nghe.dang { border-color: var(--cam); background: rgba(242, 138, 28, .18); animation: nhip 1.1s ease-in-out infinite; }
+  @keyframes nhip { 50% { transform: translate(-50%, -50%) scale(1.2); border-width: 4px; } }
+  @media (prefers-reduced-motion: reduce) { .nghe.dang { animation: none; } }
+
+  footer { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--the);
+           border-top: 1px solid var(--vien); }
+  .ctl { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--vien); background: var(--the); font-size: 16px; flex: none; }
+  .ctl:hover { border-color: var(--xanh); color: var(--xanh); }
+  #phat { width: 54px; height: 54px; background: var(--xanh); border-color: var(--xanh); color: #fff; font-size: 20px; }
+  #phat:hover { background: #0a5f6b; color: #fff; }
+  .dang-nghe { min-width: 0; flex: 1; display: grid; gap: 4px; }
+  .dang-nghe .ten { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dang-nghe .ten small { color: var(--mo); font-weight: 500; }
+  .thanh { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mo); font-variant-numeric: tabular-nums; }
+  .thanh input { flex: 1; accent-color: var(--xanh); }
+  select { font: inherit; font-weight: 700; border: 1px solid var(--vien); border-radius: 10px; padding: 6px 8px; background: var(--the); }
+
+  dialog { border: 0; border-radius: 16px; padding: 0; background: #000; width: min(900px, 94vw); }
+  dialog::backdrop { background: rgba(20, 28, 32, .7); }
+  dialog video { display: block; width: 100%; max-height: 80vh; }
+  dialog .dong { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; border-radius: 50%; border: 0;
+                 background: rgba(255,255,255,.9); font-size: 18px; font-weight: 800; z-index: 1; }
+
+  #chon-phan { display: none; max-width: 150px; }
+  @media (max-width: 1100px) {
+    body { grid-template: var(--dau) 1fr var(--cuoi) / 1fr; }
+    aside { display: none; }
+    .goi-y { display: none; }
+    #chon-phan { display: block; }
+    footer { overflow-x: auto; } footer > * { flex: none; } footer .dang-nghe { flex: 1 0 150px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Power Up <span>3</span></h1>
+  <div class="goi-y">Bấm <b>tai nghe</b> 🎧 để nghe (<b>♪</b> = chữ chạy theo tiếng) · chạm <b>ô trắng</b> để làm bài · chạm <b>số bài</b> để phóng to · ← → lật trang · Space dừng/phát</div>
+  <div class="phai">
+    <select id="chon-phan" aria-label="Chọn bài"></select>
+        <button class="nut-nho" id="viet" aria-pressed="false" title="Viết lên trang bằng Apple Pencil (PC: chuột)">✏️ Viết</button>
+    <button class="nut-nho" id="che-do" aria-pressed="true" title="Xem 2 trang cạnh nhau">2 trang</button>
+  </div>
+</header>
+
+<aside>
+  <h2>Giáo trình</h2>
+  <nav id="muc-luc"></nav>
+  <h2>Trang này học gì</h2>
+  <div id="huong-dan"></div>
+</aside>
+
+<main id="san">
+  <div id="cong-cu" role="toolbar" aria-label="Bút viết">
+    <button class="mau" style="--m:#1d2b36;background:#1d2b36" data-m="#1d2b36" aria-label="Bút đen" aria-pressed="true"></button>
+    <button class="mau" style="--m:#e03a3a;background:#e03a3a" data-m="#e03a3a" aria-label="Bút đỏ" aria-pressed="false"></button>
+    <button class="mau" style="--m:#1f6fd1;background:#1f6fd1" data-m="#1f6fd1" aria-label="Bút xanh dương" aria-pressed="false"></button>
+    <button class="mau" style="--m:#1f9d4c;background:#1f9d4c" data-m="#1f9d4c" aria-label="Bút xanh lá" aria-pressed="false"></button>
+    <span class="vach"></span>
+    <button id="co" title="Đổi nét mảnh / đậm">Mảnh</button>
+    <button id="tay" aria-pressed="false" title="Tẩy">🧽 Tẩy</button>
+    <span class="vach"></span>
+    <button id="hoan-tac" title="Hoàn tác nét vừa viết">↶</button>
+    <button id="xoa-trang" title="Xoá hết chữ viết trên trang">🗑</button>
+    <span class="vach"></span>
+    <button id="phong" aria-pressed="false" title="Chạm vào chỗ cần viết để phóng to">🔍 Phóng to</button>
+    <button id="ngon-tay" aria-pressed="false" title="Cho phép ngón tay viết (mặc định chỉ Apple Pencil / chuột)">✋</button>
+    <button id="luu-anh" title="Lưu ảnh trang kèm chữ con viết">📷</button>
+    <span class="bao" id="bao"></span>
+  </div>
+  <button class="lat" id="truoc" aria-label="Trang trước">‹</button>
+  <button class="lat" id="sau" aria-label="Trang sau">›</button>
+</main>
+
+<footer>
+  <button class="ctl" id="bai-truoc" aria-label="Bài nghe trước" title="Bài nghe trước">⏮</button>
+  <button class="ctl" id="phat" aria-label="Phát / dừng">▶</button>
+  <button class="ctl" id="bai-sau" aria-label="Bài nghe sau" title="Bài nghe sau">⏭</button>
+  <div class="dang-nghe">
+    <div class="ten" id="ten">Chưa chọn bài nghe <small>— bấm tai nghe 🎧 trên trang</small></div>
+    <div class="thanh"><span id="da">0:00</span><input type="range" id="tua" min="0" max="1000" value="0" aria-label="Tua"><span id="tong">0:00</span></div>
+  </div>
+  <button class="nut-nho" id="ca-trang" title="Nghe lần lượt mọi bài trên trang đang mở">Nghe cả trang</button>
+  <button class="nut-nho" id="lap" aria-pressed="false" title="Lặp lại bài đang nghe">🔁 Lặp</button>
+  <select id="toc" aria-label="Tốc độ" title="Tốc độ đọc">
+    <option value="0.75">Chậm</option><option value="1" selected>Thường</option><option value="1.25">Nhanh</option>
+  </select>
+</footer>
+
+<dialog id="hop-video"><button class="dong" aria-label="Đóng">✕</button><video id="vid" controls playsinline></video></dialog>
+<audio id="am" preload="auto"></audio>
+
+<script src="_app/du_lieu.js"></script>
+<script>
+const D = window.OPW, $ = id => document.getElementById(id);
+const TI_LE = 1024 / 1344;                              // rộng/cao ảnh trang
+const am = $('am'), san = $('san');
+const url = p => p.split('/').map(encodeURIComponent).join('/');
+const nho = { doc(k, md) { try { return localStorage.getItem(k) ?? md; } catch { return md; } },
+              ghi(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+// Lượt xem: bìa, trang tên sách, rồi từng cặp trang đôi (3-4, 5-6, ...) như sách mở
+function dsLuot(hai) {
+  const ds = [];
+  for (let p = 1; p <= D.soTrang;) {
+    if (hai && p >= 2 && p < D.soTrang) { ds.push([p, p + 1]); p += 2; } else ds.push([p++]);
+  }
+  return ds;
+}
+let haiTrang = nho.doc('pu3-hai', matchMedia('(max-width: 1100px)').matches ? '0' : '1') === '1';
+let luot = dsLuot(haiTrang), iLuot = 0;
+let iBai = -1, hang = [];                               // bài đang nghe (chỉ số trong D.track), hàng đợi "nghe cả trang"
+
+const phanCua = p => D.phan.find(s => p >= s.tu && p <= s.den);
+const anhTrang = p => `_app/trang/p${String(p).padStart(3, '0')}.jpg`;
+const soSach = p => p <= 1 ? 'Bìa' : p >= 128 ? 'Bìa sau' : `Trang ${p}`;
+// Bản web: tệp nằm trên Drive, may-chu.js cho window.taiTruoc → xin tải trước bài nghe của trang đang mở + ảnh các lượt kề
+// (bấm nghe, lật trang khỏi chờ GAS ~3 s mỗi tệp). Bản máy (file://) không có → bỏ qua.
+function taiTruocKe() {
+  const trang = luot[iLuot], ke = [luot[iLuot + 1], luot[iLuot - 1], luot[iLuot + 2]].flat().filter(Boolean);
+  window.taiTruoc?.([...D.track.filter(t => trang.includes(t.trang)).map(t => t.file), ...ke.map(anhTrang)]);
+}
+const tenBai = t => t.ten || `${t.disc}.${String(t.track).padStart(2, '0')}`;
+
+function veMucLuc() {
+  $('muc-luc').innerHTML = D.phan.map((s, i) =>
+    `<button class="muc${s.ten.startsWith('Review') ? ' review' : ''}" data-i="${i}"><span>${s.ten}${s.chu ? `<i>${s.chu}</i>` : ''}</span><small>${s.tu > 1 && s.tu < 128 ? s.tu : ''}</small></button>`).join('');
+  $('chon-phan').innerHTML = D.phan.map((s, i) => `<option value="${i}">${s.ten}</option>`).join('');
+  const toi = i => moTrang(D.phan[i].tu);
+  $('muc-luc').onclick = e => { const b = e.target.closest('.muc'); if (b) toi(+b.dataset.i); };
+  $('chon-phan').onchange = e => toi(+e.target.value);
+}
+
+function moTrang(p) {
+  iLuot = Math.max(0, luot.findIndex(l => l.includes(p)));
+  ve();
+}
+
+function ve() {
+  const trang = phong ? [phong.p] : luot[iLuot];
+  if (dangVe) chotNet();                                // trang đổi giữa nét: canvas cũ bị gỡ, không bao giờ nhận pointerup → bút treo, hết viết được
+  san.querySelectorAll('.trang').forEach(n => { n.querySelector('canvas').width = 0; n.remove(); });   // iPad: trả ngay bộ nhớ canvas (vượt trần thì getContext ra null)
+  for (const p of trang) {
+    const k = document.createElement('div');
+    k.className = 'trang' + (phong ? ' phong' : ''); k.dataset.p = p;
+    k.innerHTML = `<div class="lop"><img src="${anhTrang(p)}" alt="${soSach(p)}" draggable="false">` +
+                  `<canvas class="viet" data-p="${p}"></canvas></div>${phong ? '' : `<div class="so">${soSach(p)}</div>`}`;
+    const lop = k.firstChild;
+    D.track.forEach((t, i) => {
+      if (t.trang !== p) return;
+      const b = document.createElement('button');
+      b.className = 'nghe' + (i === iBai ? ' dang' : '');
+      b.style.left = t.x * 100 + '%'; b.style.top = t.y * 100 + '%';
+      b.dataset.i = i; b.title = b.ariaLabel = 'Nghe ' + tenBai(t); if (t.loai) b.dataset.loai = t.loai;
+      b.onclick = () => {                              // bấm lại đúng nút đang đọc = ngừng; nút khác = ngừng cái cũ, đọc cái mới
+        hang = [];
+        if (i === iBai && !am.paused) { am.pause(); document.querySelectorAll('.nghe.dang').forEach(x => x.classList.remove('dang')); }
+        else phat(i);
+      };
+      lop.appendChild(b);
+    });
+    ganBut(lop.querySelector('canvas'));
+    san.insertBefore(k, $('sau'));
+  }
+  coGian();
+  $('truoc').disabled = iLuot === 0; $('sau').disabled = iLuot === luot.length - 1;
+  const s = phanCua(trang[0]), iS = D.phan.indexOf(s);
+  document.querySelectorAll('.muc').forEach((b, i) => b.classList.toggle('dang', i === iS));
+  $('chon-phan').value = iS;
+  nho.ghi('pu3-trang', trang[0]);
+  taiTruocKe();
+  // lật sang trang không chứa bài đang phát → dừng tiếng, bỏ hàng đợi "Nghe cả trang" (anh báo 27/09/2026);
+  // ⏭ bài sau tự lật trang thì vẫn đọc (bài mới nằm trên trang vừa mở), phóng to 1 trang của cặp trang cũng không dừng
+  if (iBai >= 0 && !am.paused && !luot[iLuot].includes(D.track[iBai].trang)) {
+    hang = []; am.pause(); document.querySelectorAll('.nghe.dang').forEach(b => b.classList.remove('dang'));
+  }
+}
+
+const chuaBut = () => document.body.classList.contains('dang-viet') ? 54 : 0;   // phần đệm thêm cho thanh bút
+function coGian() {                                     // trang vừa khít khung, không cuộn
+  const ks = san.querySelectorAll('.trang'); if (!ks.length) return;
+  if (phong) {                                          // phóng to 1 trang, lấp đầy khung, kéo bằng ngón tay / lăn chuột
+    const k = ks[0], W = san.clientWidth - 24, H = san.clientHeight - 24 - chuaBut();
+    k.style.width = W + 'px'; k.style.height = H + 'px';
+    const h0 = Math.min(H, W / TI_LE), lh = h0 * phong.s, lw = lh * TI_LE, lop = k.firstChild;
+    lop.style.width = lw + 'px'; lop.style.height = lh + 'px'; delete lop.dataset.ve;
+    return datPhong();
+  }
+  const W = san.clientWidth - 24 - 112, H = san.clientHeight - 24 - 26 - chuaBut();
+  const h = Math.min(H, W / (ks.length * TI_LE));
+  ks.forEach(k => { k.style.height = h + 'px'; k.style.width = h * TI_LE + 'px'; k.firstChild.style.cssText = ''; });
+  san.querySelectorAll('canvas.viet').forEach(veLai);
+}
+
+const bd = () => D.track[iBai]?.bd || 0;               // giây bắt đầu nội dung: bỏ qua lời dẫn "Page… Unit… Listen and repeat" (_app/tools/5_bo_dan.py)
+function phat(i) {
+  if (i < 0 || i >= D.track.length) return;
+  iBai = i;
+  const t = D.track[i];
+  if (!luot[iLuot].includes(t.trang)) moTrang(t.trang);
+  am.src = url(t.file) + (t.bd ? '#t=' + t.bd : ''); am.playbackRate = +$('toc').value;
+  am.play().catch(() => {});
+  $('ten').innerHTML = `${tenBai(t)} <small>— ${soSach(t.trang)} · ${phanCua(t.trang).ten}</small>`;
+  document.querySelectorAll('.nghe').forEach(b => b.classList.toggle('dang', +b.dataset.i === i));
+}
+
+function ngheCaTrang() {
+  hang = D.track.map((t, i) => i).filter(i => luot[iLuot].includes(D.track[i].trang));
+  if (hang.length) phat(hang.shift());
+}
+
+const mmss = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00';
+am.ontimeupdate = () => { const b = bd(), dai = am.duration - b;          // giờ + thanh tua tính từ chỗ hết lời dẫn
+                          $('da').textContent = mmss(Math.max(0, am.currentTime - b)); $('tong').textContent = mmss(dai);
+                          if (dai > 0) $('tua').value = (am.currentTime - b) / dai * 1000; };
+am.onplay = () => { $('phat').textContent = '⏸'; };
+am.onpause = () => { $('phat').textContent = '▶'; };
+am.onended = () => {                                    // lặp tự làm (am.loop quay về 0:00 = đọc lại lời dẫn)
+  if ($('lap').ariaPressed === 'true') { am.currentTime = bd(); am.play().catch(() => {}); }
+  else if (hang.length) phat(hang.shift()); else document.querySelectorAll('.nghe.dang').forEach(b => b.classList.remove('dang'));
+};
+$('tua').oninput = e => { if (am.duration) am.currentTime = bd() + e.target.value / 1000 * (am.duration - bd()); };
+$('phat').onclick = () => { if (iBai < 0) return ngheCaTrang(); if (am.ended) am.currentTime = bd(); am.paused ? am.play() : am.pause(); };
+$('bai-truoc').onclick = () => { hang = []; phat(Math.max(0, iBai - 1)); };
+$('bai-sau').onclick = () => { hang = []; phat(iBai + 1); };
+$('ca-trang').onclick = ngheCaTrang;
+$('lap').onclick = e => { e.currentTarget.ariaPressed = e.currentTarget.ariaPressed !== 'true'; };
+$('toc').onchange = e => { am.playbackRate = +e.target.value; };
+$('truoc').onclick = () => { thuPhong(); if (iLuot > 0) { iLuot--; ve(); } };
+$('sau').onclick = () => { thuPhong(); if (iLuot < luot.length - 1) { iLuot++; ve(); } };
+$('che-do').onclick = () => {
+  const p = luot[iLuot][0]; haiTrang = !haiTrang; nho.ghi('pu3-hai', haiTrang ? '1' : '0');
+  $('che-do').ariaPressed = haiTrang; luot = dsLuot(haiTrang); moTrang(p);
+};
+$('hop-video').querySelector('.dong').onclick = () => $('hop-video').close();
+$('hop-video').onclose = () => { $('vid').pause(); $('vid').removeAttribute('src'); $('vid').load(); };
+$('hop-video').onclick = e => { if (e.target === $('hop-video')) $('hop-video').close(); };
+addEventListener('resize', coGian);
+addEventListener('keydown', e => {
+  if ($('hop-video').open || e.target.matches('input, select')) return;
+  if (e.key === 'ArrowLeft') $('truoc').click();
+  else if (e.key === 'ArrowRight') $('sau').click();
+  else if (e.key === ' ') { e.preventDefault(); $('phat').click(); }
+  else if (e.key === 'Escape') { chonCho = false; document.body.classList.remove('chon-cho'); bao(''); thuPhong(); }
+});
+
+// ===== Viết lên trang: Apple Pencil (iPad) / chuột (PC) =====
+// Nét lưu theo toạ độ tỉ lệ trang (0..1) nên phóng to/thu nhỏ, đổi máy vẫn đúng chỗ.
+const MAX_PX = 12e6;                                    // trần điểm ảnh 1 canvas (Safari iPad giới hạn ~16,7 triệu)
+var phong = null;                                       // {p, s, x, y}: trang đang phóng to, hệ số, tâm nhìn
+let chonCho = false, dangVe = null, butXuong = false;
+const but = { mau: '#1d2b36', dam: false, tay: false, ngonTay: false };
+const net = {}, lichSu = [];                            // net[p] = [{m: màu | 'xoa', w: 1|2, d: [x, y, lực, ...]}]
+const netCua = p => net[p] ??= (() => { try { return JSON.parse(nho.doc('pu3-viet-' + p, '[]')); } catch { return []; } })();
+const lam = v => Math.round(v * 1e4) / 1e4, lamLuc = v => Math.round((v || 0.5) * 100) / 100;
+const bao = t => { $('bao').textContent = t; };
+
+const henLuu = {};
+function luuNet(p) { clearTimeout(henLuu[p]); henLuu[p] = setTimeout(() => ghiNet(p), 400); }
+function ghiNet(p) {
+  clearTimeout(henLuu[p]); delete henLuu[p];
+  try { localStorage.setItem('pu3-viet-' + p, JSON.stringify(netCua(p))); }
+  catch { bao('Bộ nhớ đầy — trang này chưa lưu được'); }
+}
+const ghiHet = () => Object.keys(henLuu).forEach(ghiNet);
+addEventListener('pagehide', ghiHet);
+document.addEventListener('visibilitychange', () => { if (document.hidden) ghiHet(); });
+function veDoan(ctx, n, i, W, H, cuoi) {                // khúc cong quanh điểm i-1: trung điểm (i-2, i-1) → trung điểm (i-1, i); cuoi: tới hẳn điểm i
+  const d = n.d, X = k => d[k * 3] * W, Y = k => d[k * 3 + 1] * H, xoa = n.m === 'xoa', q = cuoi ? i : i - 1;
+  ctx.globalCompositeOperation = xoa ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = xoa ? '#000' : n.m;
+  ctx.lineWidth = Math.max(1, W * (xoa ? 0.03 : (n.w === 2 ? 0.0075 : 0.004) * (0.55 + 0.9 * d[q * 3 + 2])));
+  ctx.beginPath();
+  if (cuoi) { ctx.moveTo((X(i - 1) + X(i)) / 2, (Y(i - 1) + Y(i)) / 2); ctx.lineTo(X(i), Y(i)); }
+  else {
+    ctx.moveTo(i === 1 ? X(0) : (X(i - 2) + X(i - 1)) / 2, i === 1 ? Y(0) : (Y(i - 2) + Y(i - 1)) / 2);
+    ctx.quadraticCurveTo(X(i - 1), Y(i - 1), (X(i - 1) + X(i)) / 2, (Y(i - 1) + Y(i)) / 2);
+  }
+  ctx.stroke();
+}
+const veNet = (ctx, n, W, H) => { const k = n.d.length / 3 - 1; for (let i = 1; i <= k; i++) veDoan(ctx, n, i, W, H); veDoan(ctx, n, k, W, H, true); };
+function veLai(cv) {
+  const r = cv.getBoundingClientRect(); if (!r.width) return;
+  let k = devicePixelRatio || 1;
+  const tong = r.width * r.height * k * k; if (tong > MAX_PX) k *= Math.sqrt(MAX_PX / tong);
+  cv.width = Math.round(r.width * k); cv.height = Math.round(r.height * k);
+  const ctx = cv.getContext('2d'); ctx.lineCap = ctx.lineJoin = 'round';
+  for (const n of netCua(+cv.dataset.p)) veNet(ctx, n, cv.width, cv.height);
+}
+function datPhong() {                                   // đặt vị trí trang phóng to theo tâm nhìn, không cho trôi ra ngoài
+  const k = san.querySelector('.trang.phong'); if (!k) return;
+  const lop = k.firstChild, W = k.clientWidth, H = k.clientHeight, lw = lop.offsetWidth, lh = lop.offsetHeight;
+  const kep = (v, a, b) => Math.min(b, Math.max(a, v));
+  const tx = lw <= W ? (W - lw) / 2 : kep(W / 2 - phong.x * lw, W - lw, 0);
+  const ty = lh <= H ? (H - lh) / 2 : kep(H / 2 - phong.y * lh, H - lh, 0);
+  phong.x = (W / 2 - tx) / lw; phong.y = (H / 2 - ty) / lh;
+  lop.style.transform = `translate(${tx}px, ${ty}px)`;
+  if (!lop.dataset.ve) { lop.dataset.ve = 1; veLai(lop.querySelector('canvas')); }
+}
+const bat = (cv, id) => { try { cv.setPointerCapture(id); } catch {} };   // giữ nét khi bút ra khỏi canvas
+const toaDo = (cv, e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+
+function ganBut(cv) {
+  cv.addEventListener('touchstart', e => { if (document.body.classList.contains('dang-viet')) e.preventDefault(); }, { passive: false });
+  cv.addEventListener('pointerdown', e => {
+    if (!document.body.classList.contains('dang-viet')) return;
+    const p = +cv.dataset.p, [x, y] = toaDo(cv, e);
+    if (chonCho) return batPhong(p, x, y);
+    const la = e.pointerType;
+    if (la === 'pen') { butXuong = true; boTay(); }     // bút đặt xuống: bỏ cử chỉ tay đang dở (lòng bàn tay tì lên màn hình)
+    const viet = la === 'pen' || la === 'mouse' || (but.ngonTay && !butXuong && !ngon.size);
+    if (!viet || dangVe) return;                        // ngón tay: chụm / kéo trang (xem "Chụm / kéo bằng ngón tay")
+    e.preventDefault(); bat(cv, e.pointerId);
+    dangVe = { id: e.pointerId, p, tay: la === 'touch', n: { m: but.tay ? 'xoa' : but.mau, w: but.dam ? 2 : 1, d: [lam(x), lam(y), lamLuc(la === 'pen' ? e.pressure : 0.5)] } };
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!dangVe || e.pointerId !== dangVe.id) return;
+    const ctx = cv.getContext('2d'), d = dangVe.n.d;
+    for (const ev of (e.getCoalescedEvents && e.getCoalescedEvents().length ? e.getCoalescedEvents() : [e])) {
+      const [x, y] = toaDo(cv, ev);
+      d.push(lam(x), lam(y), lamLuc(ev.pointerType === 'pen' ? 0.6 * d[d.length - 1] + 0.4 * (ev.pressure || 0.5) : 0.5));
+      veDoan(ctx, dangVe.n, d.length / 3 - 1, cv.width, cv.height);
+    }
+  });
+  const ket = e => {
+    if (e.pointerType === 'pen') butXuong = false;
+    if (!dangVe || e.pointerId !== dangVe.id) return;
+    const n = dangVe.n, d = n.d, ctx = cv.getContext('2d');
+    if (e.type === 'pointerup') {                      // điểm nhấc bút (nét quẹt rất nhanh Safari có thể không gửi pointermove nào)
+      const [x, y] = toaDo(cv, e).map(lam);
+      if (x !== d[d.length - 3] || y !== d[d.length - 2]) { d.push(x, y, d[d.length - 1]); veDoan(ctx, n, d.length / 3 - 1, cv.width, cv.height); }
+    }
+    chotNet();
+    veDoan(ctx, n, d.length / 3 - 1, cv.width, cv.height, true);   // nửa khúc cuối của nét
+  };
+  cv.addEventListener('pointerup', ket); cv.addEventListener('pointercancel', ket);
+}
+function chotNet() {                                    // nét xong: lưu + cho hoàn tác
+  const { p, n } = dangVe; dangVe = null;
+  if (n.d.length === 3) n.d.push(...n.d);              // chấm 1 điểm
+  netCua(p).push(n); lichSu.push(p); luuNet(p);
+}
+
+// Lòng bàn tay tì lên màn hình lúc viết hay chạm nhầm nút (mũi tên lật trang, nút ở chân trang…). Đang bật ✏️ Viết thì cú chạm TAY vào
+// nút ngoài thanh bút bị bỏ qua: ‹ › (sát mép trang) luôn bỏ qua; nút khác chỉ bỏ qua khi bút có chạm/lượn trên màn hình trong khoảng
+// từ 3 s trước cú chạm tới lúc nhấc tay. Bút, chuột, phím bấm như thường; ngón tay bấm lúc bút đã nghỉ vẫn được.
+let lanBut = -1e9;
+const tayCham = new WeakMap(), nutCua = e => e.target.closest?.('button, a, select, input');
+addEventListener('pointerdown', e => {
+  if (e.pointerType === 'pen') lanBut = e.timeStamp;
+  const n = nutCua(e); if (n) e.pointerType === 'touch' ? tayCham.set(n, e.timeStamp) : tayCham.delete(n);
+}, true);
+addEventListener('pointermove', e => { if (e.pointerType === 'pen') lanBut = e.timeStamp; }, true);
+function chanTay(e) {                                   // mousedown (chặn bảng chọn của select mở ra) + click
+  const n = nutCua(e);
+  if (!e.isTrusted || !n || !tayCham.has(n)) return;    // $('sau').click() của phím ← →: cho qua
+  const t0 = tayCham.get(n);
+  if (e.type === 'click') tayCham.delete(n);
+  if (!document.body.classList.contains('dang-viet') || n.closest('#cong-cu, dialog') || n.id === 'viet') return;
+  if (n.classList.contains('lat') || lanBut > t0 - 3000) { e.preventDefault(); e.stopImmediatePropagation(); bao('Đang viết: bấm nút bằng bút, hoặc tắt ✏️ Viết'); }
+}
+addEventListener('mousedown', chanTay, true); addEventListener('click', chanTay, true);
+
+function batPhong(p, x, y, s = 2.6) {
+  chonCho = false; document.body.classList.remove('chon-cho');
+  phong = { p, s, x, y }; bao('');
+  $('phong').textContent = '↩ Thu nhỏ'; $('phong').ariaPressed = true;
+  ve();
+}
+function thuPhong() {
+  if (!phong) return;
+  const p = phong.p; phong = null;
+  $('phong').textContent = '🔍 Phóng to'; $('phong').ariaPressed = false;
+  moTrang(p);
+}
+
+// ===== Chụm / kéo bằng ngón tay (anh báo 27/09/2026: chụm cả trang web thì menu 🎮 ✏️ và thanh bút trôi ra ngoài màn hình, lúc viết
+// lại không kéo được trang; phóng to bằng 🔍 phải bấm từng ô). Giờ trong khung sách, lúc đọc lẫn lúc viết: 2 ngón chụm/mở = phóng to/thu
+// nhỏ quanh chỗ chụm (thu về dưới 1,1× là trở lại cả trang), 1 ngón kéo = di chuyển trang đang phóng to, bút = viết. Bút đặt xuống thì bỏ
+// cử chỉ tay đang dở; ngón chạm lúc bút đang xuống (lòng bàn tay) không tính. PC: Ctrl + lăn chuột (chụm bàn di chuột) = phóng to.
+['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));   // iPad: không chụm cả trang web
+const ngon = new Map();                                 // ngón tay đang chạm khung sách: id → [x, y] (vị trí mới nhất)
+let chum = null, keo = null;                            // chum: {d0, s0, ax, ay} · keo: đã kéo quá ngưỡng (lòng bàn tay nhích nhẹ không làm trôi trang)
+const CO_MAX = 5;
+function diemTrang(x, y) {                              // điểm màn hình → [trang, x, y tỉ lệ trên trang]
+  for (const lop of san.querySelectorAll('.trang .lop')) {
+    const r = lop.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return [+lop.parentNode.dataset.p, (x - r.left) / r.width, (y - r.top) / r.height];
+  }
+}
+function neoPhong(ax, ay, x, y, s) {                    // hệ số s, điểm (ax, ay) của trang nằm dưới điểm màn hình (x, y); chưa vẽ lại nét (xong cử chỉ mới vẽ)
+  const k = san.querySelector('.trang.phong'), lop = k.firstChild, r = k.getBoundingClientRect();
+  const W = k.clientWidth, H = k.clientHeight, lh = Math.min(H, W / TI_LE) * s, lw = lh * TI_LE;
+  phong.s = s; lop.style.width = lw + 'px'; lop.style.height = lh + 'px'; lop.dataset.ve = 1;
+  phong.x = (W / 2 - (x - r.left - ax * lw)) / lw; phong.y = (H / 2 - (y - r.top - ay * lh)) / lh;
+  datPhong();
+}
+function xongCo() {                                     // hết chụm: nhỏ quá thì về cả trang, không thì vẽ lại nét cho sắc ở cỡ mới
+  if (!phong) return;
+  if (phong.s < 1.1) return thuPhong();
+  const lop = san.querySelector('.trang.phong .lop'); if (lop) { delete lop.dataset.ve; datPhong(); }
+}
+function boTay() { ngon.clear(); keo = null; if (chum) { chum = null; if (phong) { const lop = san.querySelector('.trang.phong .lop'); if (lop) { delete lop.dataset.ve; datPhong(); } } } }
+function batChum() {
+  const [a, b] = [...ngon.values()], x = (a[0] + b[0]) / 2, y = (a[1] + b[1]) / 2, t = diemTrang(x, y);
+  if (!t) return;
+  if (dangVe?.tay) { const p = dangVe.p; dangVe = null; veLaiTrang(p); }   // ngón thứ nhất đang viết (✋ bật) → hoá ra là chụm: bỏ nét đó
+  if (!phong || phong.p !== t[0]) batPhong(t[0], .5, .5, 1);   // vào phóng to đúng trang dưới 2 ngón (1× = vừa khung)
+  chum = { d0: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, s0: phong.s, ax: t[1], ay: t[2] };
+  neoPhong(t[1], t[2], x, y, phong.s);
+}
+san.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'touch' || butXuong || e.target.closest('button, #cong-cu')) return;
+  ngon.set(e.pointerId, [e.clientX, e.clientY]); keo = null;
+  if (!(dangVe && dangVe.id === e.pointerId)) try { san.setPointerCapture(e.pointerId); } catch {}   // trang dựng lại lúc vào phóng to vẫn theo ngón
+  if (ngon.size === 2) batChum();
+});
+san.addEventListener('pointermove', e => {
+  const cu = ngon.get(e.pointerId); if (!cu) return;
+  const dx = e.clientX - cu[0], dy = e.clientY - cu[1];
+  if (chum && ngon.size >= 2) {
+    ngon.set(e.pointerId, [e.clientX, e.clientY]);
+    const [a, b] = [...ngon.values()], s = Math.min(CO_MAX, Math.max(.8, chum.s0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / chum.d0));
+    return neoPhong(chum.ax, chum.ay, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, s);
+  }
+  if (!phong || ngon.size !== 1 || (dangVe && dangVe.id === e.pointerId)) return;
+  if (!keo && Math.hypot(dx, dy) < 8) return;          // chưa quá ngưỡng: giữ nguyên chỗ neo
+  keo = true; ngon.set(e.pointerId, [e.clientX, e.clientY]);
+  const lop = san.querySelector('.trang.phong .lop'); if (!lop) return;
+  phong.x -= dx / lop.offsetWidth; phong.y -= dy / lop.offsetHeight; datPhong();
+});
+const nhacTay = e => {
+  if (e.pointerType === 'pen') butXuong = false;       // bút nhấc lên ngoài canvas (canvas vừa bị dựng lại) vẫn nhả cờ bút
+  if (!ngon.delete(e.pointerId)) return;
+  if (chum && ngon.size < 2) { chum = null; xongCo(); }
+  keo = null;
+};
+addEventListener('pointerup', nhacTay, true); addEventListener('pointercancel', nhacTay, true);
+san.addEventListener('wheel', e => {                    // PC: Ctrl + lăn (chụm trên bàn di chuột) = phóng to quanh con trỏ
+  if (!e.ctrlKey) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const t = diemTrang(e.clientX, e.clientY); if (!t) return;
+  if (!phong || phong.p !== t[0]) batPhong(t[0], .5, .5, 1);
+  neoPhong(t[1], t[2], e.clientX, e.clientY, Math.min(CO_MAX, Math.max(.8, phong.s * Math.exp(-e.deltaY / 150))));
+  clearTimeout(chum?.hen); if (!chum) chum = { phim: true };
+  chum.hen = setTimeout(() => { chum = null; xongCo(); }, 250);
+}, { passive: false });
+const trangDangMo = () => phong ? [phong.p] : luot[iLuot];
+const veLaiTrang = p => san.querySelectorAll(`canvas.viet[data-p="${p}"]`).forEach(veLai);
+
+$('viet').onclick = () => {
+  const bat = !document.body.classList.contains('dang-viet');
+  document.body.classList.toggle('dang-viet', bat); $('viet').ariaPressed = bat; coGian();
+  if (!bat) { chonCho = false; document.body.classList.remove('chon-cho'); thuPhong(); }
+};
+$('cong-cu').querySelectorAll('.mau').forEach(b => b.onclick = () => {
+  but.mau = b.dataset.m; but.tay = false; $('tay').ariaPressed = false;
+  $('cong-cu').querySelectorAll('.mau').forEach(x => x.ariaPressed = x === b);
+});
+$('co').onclick = () => { but.dam = !but.dam; $('co').textContent = but.dam ? 'Đậm' : 'Mảnh'; };
+$('tay').onclick = () => { but.tay = !but.tay; $('tay').ariaPressed = but.tay; };
+$('ngon-tay').onclick = () => { but.ngonTay = !but.ngonTay; $('ngon-tay').ariaPressed = but.ngonTay;
+                                 bao(but.ngonTay ? 'Ngón tay cũng viết được' : 'Chỉ Apple Pencil / chuột viết'); };
+$('hoan-tac').onclick = () => {
+  while (lichSu.length) { const p = lichSu.pop(); if (netCua(p).length) { netCua(p).pop(); luuNet(p); return veLaiTrang(p); } }
+  bao('Không còn nét để hoàn tác');
+};
+let henXoa = 0;
+$('xoa-trang').onclick = () => {
+  if (Date.now() - henXoa > 3000) { henXoa = Date.now(); return bao('Bấm 🗑 lần nữa để xoá hết chữ trên trang'); }
+  henXoa = 0; bao('');
+  for (const p of trangDangMo()) { net[p] = []; luuNet(p); veLaiTrang(p); }
+};
+$('phong').onclick = () => {
+  if (phong) return thuPhong();
+  chonCho = !chonCho; document.body.classList.toggle('chon-cho', chonCho);
+  bao(chonCho ? 'Chạm vào chỗ muốn viết trên trang' : '');
+};
+$('luu-anh').onclick = async () => {
+  for (const p of trangDangMo()) {
+    const img = new Image(); img.src = anhTrang(p); await img.decode();
+    const c = document.createElement('canvas'), l = document.createElement('canvas');
+    c.width = l.width = img.naturalWidth; c.height = l.height = img.naturalHeight;
+    const lg = l.getContext('2d'); lg.lineCap = lg.lineJoin = 'round';
+    netCua(p).forEach(n => veNet(lg, n, l.width, l.height));   // nét vẽ lớp riêng để tẩy không ăn vào ảnh trang
+    const g = c.getContext('2d'); g.drawImage(img, 0, 0); g.drawImage(l, 0, 0);
+    try {
+      const a = document.createElement('a'); a.download = `PowerUp3 ${soSach(p)} - con viet.png`; a.href = c.toDataURL('image/png'); a.click();
+    } catch { return bao('Mở file trực tiếp trên PC thì trình duyệt chặn lưu ảnh — bản iPad sẽ lưu được'); }
+  }
+};
+san.addEventListener('wheel', e => {                    // PC: lăn chuột để kéo trang đang phóng to
+  if (!phong) return;
+  e.preventDefault();
+  const lop = san.querySelector('.trang.phong .lop');
+  phong.x += (e.shiftKey ? e.deltaY : e.deltaX) / lop.offsetWidth; if (!e.shiftKey) phong.y += e.deltaY / lop.offsetHeight;
+  datPhong();
+}, { passive: false });
+
+$('che-do').ariaPressed = haiTrang;
+veMucLuc();
+moTrang(+nho.doc('pu3-trang', 2));
+</script>
+<script src="_app/sach-pu3.js"></script>
+<script src="_app/bai_tap.js"></script>
+<script src="_app/bai-tap.js"></script>
+<script src="bot.js"></script>
+</body>
+</html>
