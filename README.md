@@ -14,7 +14,7 @@ giải thích lý do từng chi tiết (Service Worker, Range, bỏ đuôi `.htm
 | Cloudflare Zero Trust (nhóm `bitter-smoke-e9ba`): Access → Applications → **Power Up 3** (`power-up-3.pages.dev` + `*.power-up-3.pages.dev`, luật dùng chung "Chi anh An (Gmail)", One-time PIN) | https://dash.cloudflare.com/c1e40df298a2b44ea5a959584b84ca24/one/access-controls/apps |
 | Cloudflare D1 `learning-english` → bảng `tien_do` (dòng `app = 'pu3'`) — **dùng chung** với Power Up 1 (`pu1`), Power Up 2 (`pu2`), Phonics Wings 5 (`opw5`); SQL ở repo `oup-5-game/sql/tien-do.sql` | https://dash.cloudflare.com/c1e40df298a2b44ea5a959584b84ca24/workers/d1 |
 | Sách trên máy (nơi sửa) | `Downloads\Tieng Anh\Power Up\Power Up Pupil's Book\Power Up Level 3 Pupil's Book\` (README ở đó = quy trình dựng sách + sổ review nội dung) |
-| Repo | chỉ git trên máy (anh chốt 05/10/2026 — không có GitHub, không có AI Studio) |
+| GitHub (private, anh tạo 05/10/2026 — không nối AI Studio) | https://github.com/Wii1591/Power-up-3 |
 
 **iPad:** Safari mở https://power-up-3.pages.dev → Chia sẻ → *Thêm vào MH chính* (tên "Power Up 3") → mở từ biểu tượng → đăng nhập Gmail → **Tải hết về máy** (Wi-Fi, 277 MB). Làm trong app ở MH chính vì iPad giữ dữ liệu của app MH chính riêng với Safari.
 
