@@ -32,13 +32,16 @@
 
   // ---------- chấm ----------
   const TICH = { tich: 1, khoanh: 1 };
-  const gon = s => String(s).toLowerCase().replace(/[’‘`´]/g, "'").replace(/[.,!?;:]/g, '').replace(/[-\s]+/g, ' ').trimStart();   // bỏ hoa/thường, dấu câu, gộp dấu cách, ’ = '
+  // bỏ hoa/thường, dấu câu, gộp dấu cách. 06/10/2026 (vá theo sách 4, Fable review): bàn phím ô chỉ có a–z 0–9 ' cách → mọi ký tự khác trong đáp án
+  // ("café", "(3916 metres)", "26/4/1977") thành dấu cách / bỏ dấu; bé hay bỏ dấu nháy ("hes", "doesnt") → bỏ hẳn dấu nháy ở cả đáp án lẫn chữ gõ
+  const gon = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’‘`´'.,!?;:()]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ').replace(/ +/g, ' ').trimStart();
   const khop = (x, v) => [].concat(x.da ?? []).find(a => gon(a).trimEnd() === gon(v).trimEnd());                                  // đáp án viết trùng chữ bé gõ
   const phaiLam = (w, x) => !x.mau && (TICH[w.kieu] ? x.da === true : x.da != null);                                            // ô phải đúng thì bài mới xong (mẫu, ô sai, ô tự do: không tính)
   const dungO = (w, x, v) => v != null && v !== '' && (w.kieu === 'viet' ? khop(x, v) != null : TICH[w.kieu] ? x.da === true : v === x.da);
   // ô viết cùng "nhom" (sơ đồ Venn, cặp chữ — anh duyệt 01/10/2026): mỗi ô nhận mọi từ của vùng nhưng 2 ô không được cùng 1 từ; ô mẫu và ô đứng trước thắng.
   // "toy box" = "box", "toy ship" = "ship" (cùng 1 thứ)
-  const goc = s => gon(s ?? '').trimEnd().replace(/^toy /, '');
+  const goc = s => gon(s ?? '').trimEnd().replace(/^toy /, '').replace(/^(the|a|an) /, '');   // chống trùng nhóm: 'woods' = 'the woods' (Codex review 06/10/2026)
   const trungNhom = (w, i, vs) => { const x = w.o[i], g = goc(vs?.[i]);
     return w.kieu === 'viet' && x.nhom != null && !!g && w.o.some((y, k) => k !== i && y.nhom === x.nhom && (y.mau || k < i) && goc(y.mau ? [].concat(y.da)[0] : vs?.[k]) === g); };
   const dungI = (w, i, vs) => dungO(w, w.o[i], vs?.[i]) && !trungNhom(w, i, vs);           // đúng ô thứ i, xét cả luật không trùng trong nhóm
@@ -255,10 +258,12 @@
     const { c, i } = dang, da = [].concat(c.w.o[i].da).map(a => gon(a).trimEnd()), max = Math.max(...da.map(a => a.length));
     let v = chuDang();
     if (k === 'xoa') v = v.slice(0, -1);
-    else if (k !== 'ok') { if (k === ' ' && (!v || v.endsWith(' '))) return; v = (v.length >= max ? v.slice(0, max - 1) : v) + k; }   // đầy chữ rồi: chữ mới thay chữ cuối
+    else if (k !== 'ok') { if (k === ' ' && (!v || v.endsWith(' '))) return; v = (gon(v).length >= max ? v.slice(0, -1) : v) + k; }   // đầy chữ rồi: chữ mới thay chữ cuối (đo trên chữ đã gon: dấu nháy / chấm không tính)
     const g = gon(v), gt = g.trimEnd(), dung = da.includes(gt) && !trungNhom(c.w, i, { ...(tt(c.p, c.w.id).v || {}), [i]: v });
     // chấm khi đủ chữ (luật puzzle5): dài ≥ đáp án ngắn nhất và không còn là phần đầu của đáp án dài hơn; phím ✔ = chấm luôn
-    const du = k === 'ok' ? !!gt : k !== 'xoa' && gt.length >= Math.min(...da.map(a => a.length)) && !da.some(a => a.length > gt.length && a.startsWith(g));
+    // 06/10/2026 (vá theo sách 4, Fable review): ô có đáp án nhiều chữ → đang gõ chỉ báo sai khi đã dài bằng đáp án DÀI nhất (trước: rung đỏ giữa chừng)
+    const du = k === 'ok' ? !!gt : k !== 'xoa' && gt.length >= Math.min(...da.map(a => a.length)) && !da.some(a => a.length > gt.length && a.startsWith(g))
+      && (da.every(a => !a.includes(' ')) || gt.length >= max);
     // đáp án ngắn là phần đầu của đáp án dài hơn ('no' / 'no she doesn't' — soát R2; 'a' / 'adjective' — R8, 01/10/2026): ô xanh nhưng CHƯA ting / nhảy ô, chờ bé gõ tiếp hoặc bấm ✔
     const cho = dung && k !== 'ok' && da.some(a => a.length > gt.length && a.startsWith(gt));   // cả 'a' / 'adjective' (p116)
     if (dung && !cho) keu('dung');
@@ -266,7 +271,8 @@
     hienGo();
     const e = oCua(c.p, c.w.id, i), cu = dang;
     if (dung && !cho) { if (e) moi(e); setTimeout(() => { if (dang !== cu) return; const ke = c.w.o.findIndex((y, n) => phaiLam(c.w, y) && !dungI(c.w, n, tt(c.p, c.w.id).v)); ke < 0 ? dongPhim() : moPhim(c, ke); }, 600); }
-    else if (du) { sai(e); phim.firstChild.classList.add('sai'); setTimeout(() => phim.firstChild?.classList.remove('sai'), 520); }
+    else if (du && !dung) { sai(e);   // đúng mà còn chờ gõ tiếp ('a' / 'adjective' rồi dấu cách) thì KHÔNG báo sai (Codex review 06/10/2026)
+      phim.firstChild.classList.add('sai'); setTimeout(() => phim.firstChild?.classList.remove('sai'), 520); }
   }
   phim.addEventListener('pointerdown', e => e.preventDefault());    // không cướp focus
   phim.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || !dang) return; b.dataset.c === 'dong' ? dongPhim() : go(b.dataset.c); });
