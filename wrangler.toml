@@ -10,3 +10,8 @@ binding = "AI"   # Workers AI cho bot Will: whisper-large-v3-turbo (nghe) + deep
 binding = "DB"   # tiến độ của con, dùng chung Phonics Wings 5 + Power Up 1–3 — bảng ở oup-5-game/sql/tien-do.sql
 database_name = "learning-english"
 database_id = "c436a287-57c0-47a6-b0dd-7dfa2e1376cf"
+
+
+[[services]]
+binding = "CLAUDE"   # Worker claude-sin (thư mục Ban web iPad\claude-sin): gọi Claude từ Singapore — Cloudflare Hồng Kông bị Anthropic chặn (403)
+service = "claude-sin"

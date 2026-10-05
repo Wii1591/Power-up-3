@@ -104,15 +104,19 @@ export async function onRequestPost({ request, env }) {
   let tl;
   try {
     const t1 = Date.now();
-    const r = await new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL }).beta.messages.create({
+    // qua Worker claude-sin (Singapore): iPad ở VN có lúc vào Cloudflare Hồng Kông, Anthropic chặn vùng đó (403 "Request not allowed", 05/10/2026).
+    // Bài thử đặt ANTHROPIC_BASE_URL (Claude giả) thì gọi thẳng.
+    const qua = env.CLAUDE && !env.ANTHROPIC_BASE_URL ? { fetch: (u, i) => env.CLAUDE.fetch(u, i) } : {};
+    const { data: r, response } = await new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL, ...qua }).beta.messages.create({
       model: MO_HINH, max_tokens: 1000,
       thinking: { type: 'between_tools' },                 // không nghĩ trước khi trả lời (mức thấp nhất của Sonnet 5.5, cần effort ≤ high)
       betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',   // bị từ chối vì chính sách → máy chủ Anthropic tự chạy lại bằng mô hình dự phòng
       output_config: { effort: 'low', format: KHUON },
       cache_control: { type: 'ephemeral' },
       system: DAN(p), messages,
-    });
+    }).withResponse();
     ms.nghi = Date.now() - t1;
+    ms.noi = response.headers.get('x-claude-colo') || request.cf?.colo;   // máy chủ đã gọi Anthropic (soát: SIN)
     const chu = r.content.find(b => b.type === 'text')?.text;
     tl = r.stop_reason !== 'refusal' && chu ? JSON.parse(chu) : null;
   } catch (e) {

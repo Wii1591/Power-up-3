@@ -26,7 +26,8 @@ giải thích lý do từng chi tiết (Service Worker, Range, bỏ đuôi `.htm
 iPad ── Cloudflare Access (chỉ Gmail anh An, phiên 1 tháng) ── Cloudflare Pages power-up-3
           │                                                      ├─ app + 309 tệp nặng (cùng 1 tên miền, CDN)
           │  Service Worker (public/sw.js)                       ├─ functions/api/tien-do.js ──► D1 learning-english, bảng tien_do (app 'pu3')
-          └─ Cache Storage trên máy: pu3-tep · pu3-vo            └─ functions/api/bot.js ──► Workers AI (Whisper nghe, Aura đọc) + Claude API
+          └─ Cache Storage trên máy: pu3-tep · pu3-vo            └─ functions/api/bot.js ──► Workers AI (Whisper nghe, Aura đọc)
+                                                                       └─ service binding CLAUDE ──► Worker claude-sin (chạy ở Singapore) ──► Claude API
 ```
 - Giống hệt Power Up 1, đổi khoá: localStorage `pu3-…` (đồng bộ), `pu3~…` (chỉ trên máy), kho `pu3-tep` / `pu3-vo`, Function chỉ nhận khoá `pu3-`.
 - **Tệp nặng KHÔNG nằm trong repo** (bản quyền Cambridge + nặng): `tools/len-cloudflare.py` gọi `_app/tools/danh-sach-up.py` của sách (danh sách trang + tiếng + video mà mã sách gọi) rồi **chép thẳng từ thư mục sách** vào `dist` lúc deploy — khác Power Up 1 (chép qua bản sao `len-Drive\PU1-len-Drive\tep-sach`), bớt một bước + bớt 250 MB trùng.
@@ -36,6 +37,7 @@ iPad ── Cloudflare Access (chỉ Gmail anh An, phiên 1 tháng) ── Cloud
 Như Power Up 1 (README Power Up 1 mục "Nói với Will": giữ 🎤 → Whisper → Claude Sonnet 5.5 → Aura; tiếng Việt chỉ khi con bí; giáo án theo loại bài; trí nhớ + ⭐ + 📊 theo từng máy). Riêng sách 3:
 - Lời dặn: "Power Up 3 (A1 Movers level)", câu tới ~20 từ, giọng cô giáo tiểu học; loại bài: truyện **Diversicus**, khung **Grammar spotlight**.
 - `bot/ngu-canh.json` sinh bằng `python tools/bot-ngu-canh.py`: từ = nhãn trong tranh + **`TU_THEM`** (từ in trên trang Vocabulary mà tranh không gắn nhãn: giờ giấc, bệnh, vật liệu, môn học, tính cách, nơi chốn, đồ du lịch…) − `BO_TU` (mảnh câu dính nhãn); mẫu câu `MAU` soạn tay từ 2 khung **Grammar spotlight** mỗi unit (lời whisper). Bìa + Map of the book → "Welcome to Diversicus"; Grammar reference (tr. 120–127) + Bìa sau → luyện lại mẫu câu cả 9 unit (`CHI_MAU`); sách 3 không có trang Mission. Đổi chữ 1 mục là mất tiến độ cũ của mục đó.
+- **Claude gọi qua Worker `claude-sin`** (thư mục `Ban web iPad\claude-sin`, dùng chung Power Up 2 + 3): iPad ở VN có lúc vào máy chủ Cloudflare **Hồng Kông**, mà Anthropic chặn yêu cầu từ Hồng Kông (403 "Request not allowed"). Pages Functions không nhận chỉ định vùng (`[placement] region` → "Invalid placement mode"), nên tách 1 Worker thường có `[placement] region = "aws:ap-southeast-1"`, không có địa chỉ công khai (`workers_dev = false`), chỉ chuyển tiếp nguyên yêu cầu (khoá vẫn là secret của app). `X-Bot.ms.noi` = máy chủ đã gọi Anthropic (đuôi `cf-ray`) — phải là `SIN`. Sửa Worker: `npx wrangler@4 deploy` trong thư mục đó.
 - Tiến độ bot: `pu3-bot-tien-do-<mã máy>`, nhật ký `pu3-bot-nk` (đồng bộ D1 như bài tập).
 
 ## 3. Quy trình làm (Claude tự làm hết)
@@ -51,7 +53,7 @@ Như Power Up 1 (README Power Up 1 mục "Nói với Will": giữ 🎤 → Whisp
 1. ✅ `wrangler pages project create power-up-3 --production-branch main`.
 2. ✅ Access app "Power Up 3" (`power-up-3.pages.dev` + `*.power-up-3.pages.dev`), chép đúng cấu hình app "Power Up 1" (luật "Chi anh An (Gmail)", One-time PIN, phiên 730 giờ) — Claude tạo qua API của dash trong Chrome của anh (OAuth wrangler không có quyền Access). Soát curl TRƯỚC khi deploy: 302.
 3. ✅ Deploy đầu + soát lại (trang, `_dm.json`, ảnh, `/api/tien-do`, link xem trước đều 302 khi chưa đăng nhập).
-4. ⬜ Anh đặt secret `ANTHROPIC_API_KEY` (dùng lại khoá của Power Up 1): Cloudflare Pages `power-up-3` → Settings → Variables and Secrets → Add → Type **Secret**, tên `ANTHROPIC_API_KEY` → Save → báo em deploy lại (secret chỉ áp từ bản deploy sau). Chưa có khoá thì khung chat báo "Chưa có khoá ANTHROPIC_API_KEY".
+4. ✅ (05/10/2026) Anh đặt secret `ANTHROPIC_API_KEY` (dùng lại khoá của Power Up 1): Cloudflare Pages `power-up-3` → Settings → Variables and Secrets → Add → Type **Secret**, tên `ANTHROPIC_API_KEY` → Save → báo em deploy lại (secret chỉ áp từ bản deploy sau). Chưa có khoá thì khung chat báo "Chưa có khoá ANTHROPIC_API_KEY".
 5. ⬜ Anh thử trên iPad (thêm MH chính → đăng nhập → Tải hết → học thử + 🐢).
 
 ## 5. Nhật ký thay đổi
@@ -59,6 +61,7 @@ Như Power Up 1 (README Power Up 1 mục "Nói với Will": giữ 🎤 → Whisp
 | Ngày | Commit / deploy | Thay đổi |
 |---|---|---|
 | 05/10/2026 | (commit đầu) deploy d639cf0d | Nhân bản từ `power-up-1-web` (d2a8dc6…ea19bbd): khoá `pu3-`, D1 dùng chung app `pu3`, biểu tượng rùa Will nền đỏ + huy hiệu tím "3" (`Ban web iPad\_icon\tao-icon.py`), `len-cloudflare.py` chép thẳng từ thư mục sách, bot theo sách 3 (lời dặn A1 Movers, `TU_THEM`, `MAU` Grammar spotlight, Grammar reference, không lệch trang), bài thử theo trang sách 3 |
+| 05/10/2026 | (commit Claude qua Singapore) | Bot gọi Claude qua service binding `CLAUDE` → Worker `claude-sin` (Singapore) vì Cloudflare Hồng Kông bị Anthropic chặn; `X-Bot.ms.noi` ghi máy chủ đã gọi Anthropic |
 
 ## 6. Lỗi hay gặp
 
@@ -69,6 +72,7 @@ Xem bảng bẫy ở README `power-up-1-web` mục 6 (đã dính ở Power Up 1 
 | Tệp sách lộ công khai | Tên miền/link mới chưa nằm trong Access app | Mọi tên miền thêm cho project phải thêm vào Access app "Power Up 3" TRƯỚC khi deploy; soát `curl -s -o /dev/null -w "%{http_code}" https://…/_dm.json` phải ra 302 |
 | Vừa tạo Access app, curl lúc 302 lúc 522 | Luật chưa lan hết các máy chủ biên | Đợi tới khi 30 lượt đều 302 rồi mới deploy (05/10/2026 dính lại) |
 | Đặt secret xong `/api/bot` vẫn 503 | Secret Pages chỉ áp cho bản deploy sau | Deploy lại |
+| Bot báo `Claude: 403 … forbidden "Request not allowed"` | Yêu cầu vào máy chủ Cloudflare Hồng Kông (`/cdn-cgi/trace` → `colo=HKG`), Anthropic không phục vụ vùng đó | Gọi Claude qua Worker `claude-sin` (Singapore) — đã làm 05/10/2026; soát `ms.noi` = `SIN` |
 | Bài thử giải bài trả `{"tong":0}` | Trang chọn chỉ có ô không chấm (vd ô Mission tích tự do) | Chọn trang có ô `da` (sách 3: trang 12; trang 6 chỉ có ô Mission tích tự do — dính 05/10/2026) |
 
 ## 7. Sổ review
@@ -78,3 +82,4 @@ Xem bảng bẫy ở README `power-up-1-web` mục 6 (đã dính ở Power Up 1 
 | 05/10/2026 | Claude (`thu-nhanh` + `thu-web`, wrangler pages dev) | Lượt đầu HỎNG ở bước giải bài (trang 6 không có ô chấm → đổi trang 12), sau đó ĐẠT: máy mới mở thẳng sách → về màn đầu bật SW → quay lại sách; trang 4 nút nghe + video chạy (qua SW, Range); giải bài trang 12 → D1 giả → máy mới kéo về; Tải hết 309/309 (277 MB); mất mạng mở sách, trang 97 + tiếng, video trang 96 vẫn chạy; 0 lỗi JS, 0 tệp hỏng. |
 | 05/10/2026 | Claude (`thu-bot`, Whisper/Aura thật + Claude giả) | ĐẠT: micro giả "I can jump." → Whisper nghe ra "I can jump" → Claude giả nhận đúng dàn ý trang 8–9 (truyện + ngữ pháp Unit 1, lời mở đầu "first session"); chấm từ ⭐ + mẫu câu đầu Unit 1 "bí", ↻ buổi mới gửi "needs practice", 📊 + cộng tiến độ 2 máy, lật trang giữa buổi giữ ngữ cảnh, ↻ khi đang giữ 🎤, đóng khung lúc xin quyền micro, 10 lượt → chào tạm biệt, chặn trang sai. Lượt đầu HỎNG ở bài thử (Claude giả nhận 3 yêu cầu thân rỗng không rõ nguồn → bỏ qua yêu cầu không có `messages`). **Chưa thử Claude thật** (chờ secret) **và iPad thật.** |
 | 05/10/2026 | Claude (`thu-tien-do pu3`, D1 máy) + bản live d639cf0d | `thu-tien-do` ĐẠT (ghi / chỉ ghi khi mới hơn / lọc khoá app khác). Bản live khi chưa đăng nhập: trang, `_dm.json`, ảnh, tiếng, `/api/tien-do`, `/api/bot` (GET + POST), link xem trước đều 302 sang `bitter-smoke-e9ba.cloudflareaccess.com`. **Chưa soát sau đăng nhập** (phiên Access trên Chrome của anh đã hết). |
+| 05/10/2026 | Claude (bản live, Chrome của anh, gọi `/api/bot` bằng chữ — không micro, không phát tiếng) | Claude THẬT: lượt đầu **HỎNG ở Power Up 3** — 403 "Request not allowed" vì Chrome vào Cloudflare Hồng Kông (`colo=HKG`; Power Up 2 lúc đó vào SIN nên chạy). Thử `[placement] region` cho Pages → bị bỏ ("Invalid placement mode") → tách Worker `claude-sin` ở Singapore, gọi qua service binding: cùng máy vào HKG, 3/3 lượt 200, `ms.noi = SIN` (đo bằng đuôi `cf-ray` của Anthropic; `req.cf.colo` trong Worker chỉ là chỗ iPad vào, lần đo đầu ra HKG là đo sai chỗ). Deploy d469308c. Hội thoại: Unit 1 trang 8–9: "We're in Russia." → ⭐ + chấm đúng mẫu Which country; "ờ... không biết" → tiếng Việt "Will hỏi vì sao các bạn nhỏ chạy đến trường…"; Grammar reference (tr. 120–121) ôn lẫn mẫu câu các unit, "I could swim when I was five." → ⭐; Unit 5 trang 60 "It is made of gold." (sai) → sửa nhẹ "The scissors are made of metal". Claude 1,7–2,6 s/lượt (lượt đầu buổi ~3 s), mp3 21–29 KB. **Còn: iPad thật (micro, giọng bé).** |
