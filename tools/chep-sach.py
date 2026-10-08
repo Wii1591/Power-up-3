@@ -11,7 +11,7 @@ RA = pathlib.Path(__file__).resolve().parents[1] / 'public'
 TRANG = 'Hoc-Power-Up-3.html'
 MA = [TRANG] + re.findall(r'<script src="([^"]+\.js)"', (NGUON / TRANG).read_text(encoding='utf-8'))   # mọi .js trang sách gọi
 CHEN = '<link rel="icon" href="icon-192.png"><script src="cau-hinh.js"></script><script src="tai-ve.js"></script><script src="may-chu.js"></script>'   # Service Worker, tải trước, đồng bộ tiến độ
-CUOI = '<script src="bot.js"></script>\n'               # 🐢 Nói với Will (cần /api/bot, chỉ có ở bản web) — sau mã sách vì dùng biến của sách
+CUOI = ''   # 🐢 Nói với Will TẮT 08/10/2026 (anh An); bật lại: '<script src="bot.js"></script>\n' + bỏ dòng tắt đầu functions/api/bot.js — bot (cần /api/bot, chỉ có ở bản web) — sau mã sách vì dùng biến của sách
 
 for p in MA:
     d = RA / p

@@ -78,6 +78,7 @@ const tlJson = x => JSON.stringify({ viet: String(x.viet || '').slice(0, 300), r
 // {trang: [p…], lich_su: [{ai: 'will', viet, reply, goi_y, dung, bi, sao} | {ai: 'be', chu}], am?: base64 WAV, tien_do?: {mục: [đúng, bí]}}
 // viet (tiếng Việt khi con bí) do iPad tự đọc bằng giọng Việt có sẵn (public/bot.js) — Aura chỉ đọc tiếng Anh
 export async function onRequestPost({ request, env }) {
+  return loi('Bot Will đã tắt (anh An, 08/10/2026) — bật lại: bỏ dòng này + CUOI trong tools/chep-sach.py', 404);   // tắt cả API để không ai gọi được Claude/Workers AI
   if (!env.ANTHROPIC_API_KEY) return loi('Chưa có khoá ANTHROPIC_API_KEY trong Cloudflare Pages', 503);
   const { trang, lich_su = [], am, tien_do } = await request.json().catch(() => ({}));
   const ten = NGU_CANH.trang[trang?.[0]];
